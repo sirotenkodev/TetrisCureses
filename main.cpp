@@ -7,19 +7,70 @@
 #include <vector>
 #include <utility>
 #include <chrono>
+#include <random>
 
 int piecesCount = 0;
 int linesCount = 0;
+
+enum class Shape {
+    I,
+    J,
+    L,
+    O,
+    Z,
+    T,
+    S
+};
 
 struct Piece {
     int x;
     int y;
 
-    int lowerRow = 2;
 
-    int piece_arr[4][4] = {
+    Shape s;
+
+    int lowerRow = 2;
+    int tPieceArr[4][4] = {
         {0,1,0,0},
         {1,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0}
+    };
+
+    int oPieceArr[4][4] = {
+        {0,1,1,0},
+        {0,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0}
+    };
+
+    int lPieceArr[4][4] = {
+        {0,0,1,0},
+        {1,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0}
+    };
+    int jPieceArr[4][4] = {
+        {0,0,0,0},
+        {1,1,1,0},
+        {0,0,1,0},
+        {0,0,0,0}
+    };
+    int sPieceArr[4][4] = {
+        {0,1,1,0},
+        {1,1,0,0},
+        {0,0,0,0},
+        {0,0,0,0}
+    };
+    int zPieceArr[4][4] = {
+        {1,1,0,0},
+        {0,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0}
+    };
+    int iPieceArr[4][4] = {
+        {1,1,1,1},
+        {0,0,0,0},
         {0,0,0,0},
         {0,0,0,0}
     };
@@ -64,20 +115,117 @@ void mulMatrix(Piece &p) {
         for(int j = 0; j < 4; ++j) {
             int sum = 0;
             for(int m = 0; m < 4; ++m) {
-                sum += p.piece_arr[i][m] * mul[m][j];
+                switch (p.s) {
+                case Shape::I:
+                    sum += p.iPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::J:
+                    sum += p.jPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::L:
+                    sum += p.lPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::O:
+                    sum += p.oPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::Z:
+                    sum += p.zPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::T:
+                    sum += p.tPieceArr[i][m] * mul[m][j];
+                    break;
+                case Shape::S:
+                    sum += p.sPieceArr[i][m] * mul[m][j];
+                    break;
+
+                }
             }
             arr[i][j] = sum;
         }
     }
 
-    std::swap(arr, p.piece_arr);
+    switch (p.s) {
+    case Shape::I:
+        std::swap(arr, p.iPieceArr);
+        break;
+    case Shape::J:
+        std::swap(arr, p.jPieceArr);
+        break;
+    case Shape::L:
+        std::swap(arr, p.lPieceArr);
+        break;
+    case Shape::O:
+        std::swap(arr, p.oPieceArr);
+        break;
+    case Shape::Z:
+        std::swap(arr, p.zPieceArr);
+        break;
+    case Shape::T:
+        std::swap(arr, p.tPieceArr);
+        break;
+    case Shape::S:
+        std::swap(arr, p.sPieceArr);
+        break;
+    }
 }
 
 void lowerPixelPiece(Piece &p) {
     int max = 0;
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
-            if(p.piece_arr[i][j] == 1) {
+            switch (p.s) {
+            case Shape::I:
+                if(p.iPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::J:
+                if(p.jPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::L:
+                if(p.lPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::O:
+                if(p.oPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::Z:
+                if(p.zPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::T:
+                if(p.tPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+            case Shape::S:
+                if(p.sPieceArr[i][j] == 1) {
+                    if(max < i) {
+                        max = i;
+                    }
+                }
+                break;
+
+            }
+            if(p.tPieceArr[i][j] == 1) {
                 if(max < i) {
                     max = i;
                 }
@@ -91,11 +239,58 @@ void lowerPixelPiece(Piece &p) {
 void deleteOldPiece(Piece &p) {
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
-            if(p.piece_arr[j][i] == 1) {
-                field[p.y + j][p.x + i] = 0;
-            } else {
-                continue;
+            switch (p.s) {
+            case Shape::I:
+                if(p.iPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::J:
+                if(p.jPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::L:
+                if(p.lPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::O:
+                if(p.oPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::Z:
+                if(p.zPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::T:
+                if(p.tPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::S:
+                if(p.sPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 0;
+                } else {
+                    continue;
+                }
+                break;
             }
+
         }
     }
 }
@@ -107,10 +302,58 @@ void rotateRight(Piece &p) {
     int arr[4][4] = {};
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
-            arr[j][i] = p.piece_arr[i][j];
+            switch (p.s) {
+            case Shape::I:
+                arr[j][i] = p.iPieceArr[i][j];
+                break;
+            case Shape::J:
+                arr[j][i] = p.jPieceArr[i][j];
+                break;
+            case Shape::L:
+                arr[j][i] = p.lPieceArr[i][j];
+                break;
+            case Shape::O:
+                arr[j][i] = p.oPieceArr[i][j];
+                break;
+            case Shape::Z:
+                arr[j][i] = p.zPieceArr[i][j];
+                break;
+            case Shape::T:
+                arr[j][i] = p.tPieceArr[i][j];
+                break;
+            case Shape::S:
+                arr[j][i] = p.sPieceArr[i][j];
+                break;
+            }
+
         }
     }
-    std::swap(arr, p.piece_arr);
+
+    switch (p.s) {
+    case Shape::I:
+        std::swap(arr, p.iPieceArr);
+        break;
+    case Shape::J:
+        std::swap(arr, p.jPieceArr);
+        break;
+    case Shape::L:
+        std::swap(arr, p.lPieceArr);
+        break;
+    case Shape::O:
+        std::swap(arr, p.oPieceArr);
+        break;
+    case Shape::Z:
+        std::swap(arr, p.zPieceArr);
+        break;
+    case Shape::T:
+        std::swap(arr, p.tPieceArr);
+        break;
+    case Shape::S:
+        std::swap(arr, p.sPieceArr);
+        break;
+    }
+
+
     mulMatrix(p);
 }
 
@@ -118,11 +361,58 @@ void rotateRight(Piece &p) {
 void addPiece(Piece &p) {
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
-            if(p.piece_arr[j][i] == 1) {
-                field[p.y + j][p.x + i] = 1;
-            } else {
-                continue;
+            switch (p.s) {
+            case Shape::I:
+                if(p.iPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::J:
+                if(p.jPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::L:
+                if(p.lPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::O:
+                if(p.oPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::Z:
+                if(p.zPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::T:
+                if(p.tPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
+            case Shape::S:
+                if(p.sPieceArr[j][i] == 1) {
+                    field[p.y + j][p.x + i] = 1;
+                } else {
+                    continue;
+                }
+                break;
             }
+
         }
     }
 }
@@ -158,8 +448,42 @@ void printField(WINDOW *w) {
 int maxCol(Piece &p, int col) {
     int max = 0;
     for(int i = 0; i < 4; ++i) {
-        if(p.piece_arr[i][col] == 1) {
-            max = i;
+        switch (p.s) {
+        case Shape::I:
+            if(p.iPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::J:
+            if(p.jPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::L:
+            if(p.lPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::O:
+            if(p.oPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::Z:
+            if(p.zPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::T:
+            if(p.tPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
+        case Shape::S:
+            if(p.sPieceArr[i][col] == 1) {
+                max = i;
+            }
+            break;
         }
     }
     return max;
@@ -168,8 +492,42 @@ int maxCol(Piece &p, int col) {
 int maxRow(Piece &p, int row) {
     int max = 0;
     for(int i = 0; i < 4; ++i) {
-        if(p.piece_arr[row][i] == 1) {
-            ++max;
+        switch (p.s) {
+        case Shape::I:
+            if(p.iPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::J:
+            if(p.jPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::L:
+            if(p.lPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::O:
+            if(p.oPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::Z:
+            if(p.zPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::T:
+            if(p.tPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
+        case Shape::S:
+            if(p.sPieceArr[row][i] == 1) {
+                ++max;
+            }
+            break;
         }
     }
     return max;
@@ -178,8 +536,42 @@ int maxRow(Piece &p, int row) {
 int minRow(Piece &p, int row) {
     int max = 4;
     for(int i = 3; i > 0; --i) {
-        if(p.piece_arr[row][i] == 1) {
-            --max;
+        switch (p.s) {
+        case Shape::I:
+            if(p.iPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::J:
+            if(p.jPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::L:
+            if(p.lPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::O:
+            if(p.oPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::Z:
+            if(p.zPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::T:
+            if(p.tPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
+        case Shape::S:
+            if(p.sPieceArr[row][i] == 1) {
+                --max;
+            }
+            break;
         }
     }
     return max;
@@ -258,7 +650,7 @@ int main(int argc, char *argv[]) {
     noecho();
     timeout(700);
 
-    WINDOW *w = newwin(30,22, 2,2);
+    WINDOW *w = newwin(50,22, 2,2);
     WINDOW *menu = newwin(15,30, 2,30);
 
     scrollok(w, TRUE);
@@ -295,7 +687,13 @@ int main(int argc, char *argv[]) {
 
 
     auto start = std::chrono::high_resolution_clock::now();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, 7);
+
     Piece p = {3, 10};
+    p.s = static_cast<Shape>(distr(gen));
     ++piecesCount;
 
     int input = ' ';
@@ -312,7 +710,8 @@ int main(int argc, char *argv[]) {
 
         if(moveDone(p)) {
             p = {4, 2};
-            ++piecesCount;
+            ++piecesCount;            
+            p.s = static_cast<Shape>(distr(gen));
             continue;
         }
 
@@ -329,9 +728,6 @@ int main(int argc, char *argv[]) {
             }
             checkUnderLine();
             continue;
-        } else if(input == 'n') {
-
-            p = {4, 2};
         }
 
         auto now = std::chrono::high_resolution_clock::now();
