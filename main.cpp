@@ -1,5 +1,5 @@
 #include <cstdlib>
-#include <ncurses.h>
+#include <curses.h>
 #include <signal.h>
 #include <panel.h>
 #include <memory>
@@ -8,9 +8,14 @@
 #include <utility>
 #include <chrono>
 #include <random>
+#include <chrono>
 
 int piecesCount = 0;
 int linesCount = 0;
+int linesGameOver = 0;
+
+bool isGameOver = false;
+bool isDeleteUnderLine = false;
 
 enum class Shape {
     I,
@@ -25,7 +30,6 @@ enum class Shape {
 struct Piece {
     int x;
     int y;
-
 
     Shape s;
 
@@ -69,8 +73,8 @@ struct Piece {
         {0,0,0,0}
     };
     int iPieceArr[4][4] = {
-        {1,1,1,1},
         {0,0,0,0},
+        {1,1,1,1},
         {0,0,0,0},
         {0,0,0,0}
     };
@@ -98,6 +102,30 @@ int field[20][10] {
     {0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0}
+};
+
+
+int gofield[20][10] {
+    {0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,1,1,1},
+    {0,0,0,0,0,0,0,0,1,0},
+    {0,0,0,0,0,0,0,0,1,0},
+    {0,0,1,1,0,0,0,0,0,0},
+    {0,0,1,0,0,0,0,0,0,0},
+    {0,0,1,1,0,0,1,1,1,0},
+    {0,0,1,0,0,0,0,1,0,0},
+    {0,0,1,1,0,0,0,1,0,0},
+    {0,0,0,0,0,0,0,0,0,0},
+    {0,0,1,1,1,0,0,0,0,0},
+    {0,0,1,0,1,0,0,1,0,0},
+    {0,0,1,1,1,0,0,0,0,0},
+    {0,0,1,1,0,0,0,1,0,0},
+    {0,0,1,0,1,0,0,1,0,0},
+    {0,0,0,0,0,0,0,1,0,0},
+    {0,0,0,1,1,1,0,0,0,0},
+    {0,0,0,1,0,1,0,0,0,0},
+    {0,1,0,1,0,0,0,0,0,0},
+    {0,1,1,1,0,0,0,0,0,0}
 };
 
 void mulMatrix(Piece &p) {
@@ -423,10 +451,10 @@ void printField(WINDOW *w) {
     getmaxyx(w, max_y, max_x);
     for(int i = 0; i < max_x - 2; ++i) {
         for(int j = 0; j < max_y; ++j) {
-            if(j == 5) {
-                mvwprintw(w, i + 7, j, "<!");
-            } else if(j == 17) {
-                mvwprintw(w, i + 7, j, "!>");
+            if(j == 4) {
+                mvwprintw(w, i + 6, j, "<!");
+            } else if(j == 16) {
+                mvwprintw(w, i + 6, j, "!>");
             }
         }
     }
@@ -434,15 +462,76 @@ void printField(WINDOW *w) {
     for(int i = 0; i < 20; ++i) {
         for(int j = 0; j < 10; ++j) {
             if(field[i][j] == 0) {
-                mvwaddch(w, i + 7, j + 7, '.');
+                mvwprintw(w, i + 6, j + 6, ".");
             } else if(field[i][j] == 1) {
-                mvwaddch(w, i + 7, j + 7, '#');
+                mvwprintw(w, i + 6, j + 6, "#");
             }
         }
         std::cout << "\n";
     }
 
-    mvwprintw(w, 27, 5, "<!==========!>");
+    mvwprintw(w, 26, 4, "<!==========!>");
+}
+
+
+void printEndField(WINDOW *w) {
+    mvwprintw(w, 1, 1, "=======TETRIS=======");
+    int max_y, max_x;
+    getmaxyx(w, max_y, max_x);
+    for(int i = 0; i < max_x - 2; ++i) {
+        for(int j = 0; j < max_y; ++j) {
+            if(j == 4) {
+                mvwprintw(w, i + 6, j, "<!");
+            } else if(j == 16) {
+                mvwprintw(w, i + 6, j, "!>");
+            }
+        }
+    }
+
+    for(int i = 0; i < 20; ++i) {
+        for(int j = 0; j < 10; ++j) {
+            if(gofield[i][j] == 0) {
+                mvwprintw(w, i + 6, j + 6, " ");
+            } else if(gofield[i][j] == 1) {
+                mvwprintw(w, i + 6, j + 6, "#");
+            }
+        }
+        std::cout << "\n";
+    }
+
+    mvwprintw(w, 26, 4, "<!==========!>");
+}
+
+void printGameOver(WINDOW *w) {
+
+    int sCount = 0;
+    int eCount = 9;
+    int osCount = 0;
+    int oeCount = 19;
+    for(int i = 0; i < 5 ; ++i) {
+        for(int j = sCount; j < eCount ; ++j) {
+            mvwprintw(w, sCount + 6, j + 6, "#");
+            wrefresh(w);
+        }
+                     usleep(200000);
+        for(int j = osCount; j < oeCount ; ++j) {
+            mvwprintw(w, j + 6, eCount + 6, "#");
+        }
+                    usleep(200000);
+        for(int j = eCount; j >= sCount ; --j) {
+            mvwprintw(w, oeCount + 6, j + 6, "#");
+            wrefresh(w);
+        }
+                        usleep(200000);
+        for(int j = oeCount; j >= osCount ; --j) {
+            mvwprintw(w, j + 6, sCount + 6, "#");
+            wrefresh(w);
+        }
+        ++sCount; --eCount;
+        ++osCount; --oeCount;
+                        usleep(200000);
+    }
+
 }
 
 int maxCol(Piece &p, int col) {
@@ -578,8 +667,8 @@ int minRow(Piece &p, int row) {
 }
 
 void checkUnderLine() {
-    for(int i = 19; i > 0; --i) {
 
+    for(int i = 19; i > 0; --i) {
         bool lineIsFull = true;
 
         for (int j = 0; j < 10; ++j) {
@@ -600,6 +689,21 @@ void checkUnderLine() {
     }
 }
 
+bool checkGameOver() {
+    linesGameOver = 0;
+    for(int i = 19; i > 0; --i) {
+
+        for (int j = 0; j < 10; ++j) {
+            if (field[i][j] == 1) {
+                ++linesGameOver;
+                break;
+            }
+        }
+    }
+
+    return linesGameOver >= 19;
+}
+
 bool checkCollision(Piece &p) {
 
     for(int i = 0; i < 4; ++i) {
@@ -610,6 +714,7 @@ bool checkCollision(Piece &p) {
             }
         }
     }
+
     return true;
 }
 
@@ -619,7 +724,6 @@ bool moveDone(Piece &p) {
     if(p.y + p.lowerRow >= 20 || !checkCollision(p)) {
         isDone = true;
     }
-    checkUnderLine();
     return isDone;
 }
 
@@ -648,9 +752,9 @@ int main(int argc, char *argv[]) {
     nonl();
     cbreak();
     noecho();
-    timeout(700);
+    halfdelay(10);
 
-    WINDOW *w = newwin(50,22, 2,2);
+    WINDOW *w = newwin(30,22, 2,2);
     WINDOW *menu = newwin(15,30, 2,30);
 
     scrollok(w, TRUE);
@@ -701,6 +805,29 @@ int main(int argc, char *argv[]) {
 
         addPiece(p);
 
+        checkUnderLine();
+
+        if(checkGameOver()) {
+
+            printGameOver(w);
+            isGameOver = true;
+
+            usleep(200000);
+            printEndField(w);
+
+            wrefresh(w);
+            wrefresh(menu);
+            break;
+        }
+
+        if(moveDone(p)) {
+            p = {4, 0};
+            p.s = static_cast<Shape>(distr(gen));
+            lowerPixelPiece(p);
+            p.x = p.lowerRow + 1;
+            ++piecesCount;
+        }
+
         printField(w);
         wrefresh(w);
 
@@ -708,43 +835,42 @@ int main(int argc, char *argv[]) {
         wrefresh(menu);
         input = getch();
 
-        if(moveDone(p)) {
-            p = {4, 2};
-            ++piecesCount;            
-            p.s = static_cast<Shape>(distr(gen));
-            continue;
-        }
-
         if(input == KEY_UP) {
             rotateRight(p);
-            continue;
         } else if(input == KEY_LEFT) {
             movePiece(p, -1, 0);
         } else if(input == KEY_RIGHT) {
             movePiece(p, 1, 0);
         } else if(input == KEY_DOWN) {
+            movePiece(p, 0, 1);
             while(!moveDone(p)) {
                 movePiece(p, 0, 1);
             }
-            checkUnderLine();
+            refresh();
             continue;
         }
 
         auto now = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = now - start;
 
-        if (elapsed.count() >= 1.0) {
+        if (elapsed.count() >= 0.3 && !moveDone(p)) {
             start = now;
             movePiece(p, 0, 1);
         }
-
         refresh();
+    }
+
+    while(true) {
+        printEndField(w);
+
         wrefresh(w);
         wrefresh(menu);
     }
+
     delwin(w);
     delwin(menu);
     endwin();
+
     exit(0);
 }
 
